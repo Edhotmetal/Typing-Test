@@ -262,7 +262,7 @@ public class TypingGUI extends JFrame
     {
 	/**Called when the user types enough characters
 	 * It ends the test and stops the timer
-	 * TODO: Calculate wpm and accuracy
+	 * TODO: Calculate accuracy
 	 */
 
 	if(testInProgress)
@@ -276,10 +276,22 @@ public class TypingGUI extends JFrame
 
     private void calcWPM(Instant end)
     {
-	int numWords = inputTextField.getText().split("\\s").length;
-	long millisElapsed = Duration.between(start,end).toMillis();
-	double minutesElapsed = millisElapsed / 60000.0;
-	wpm.setText(String.format("%3.2f", (numWords / minutesElapsed)));
+	/**Calculates the user's typing speed at the end of the test
+	 * It counts the words in the input text field
+	 * and divides it by the number of minutes that have passed
+	 * since the test began
+	 */
+
+	// check if the test was completed or interrupted by the user clicking refresh
+	if(inputTextField.getText().length() == sampleText.getText().length())
+	{
+	    int numWords = inputTextField.getText().split("\\s").length;
+	    long millisElapsed = Duration.between(start,end).toMillis();
+	    double minutesElapsed = millisElapsed / 60000.0;
+	    wpm.setText(String.format("%3.2f", (numWords / minutesElapsed)));
+	}
+	else
+	    wpm.setText("0");
     }
 
     private BufferedImage getImage(String imagePath)
@@ -305,6 +317,11 @@ public class TypingGUI extends JFrame
 
     private void refresh()
     {
+	/** Resets the window to prepare for the next test
+	 * This is called when the user clicks refresh
+	 * Not when the test ends
+	 */
+
 	System.out.println("RESTARTING TEST@!!!!");
 	if(timer != null)
 	    if(timer.isRunning())
