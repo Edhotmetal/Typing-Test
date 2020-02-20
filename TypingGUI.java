@@ -158,6 +158,7 @@ public class TypingGUI extends JFrame
 
 	// Set the refresh button to call its method when clicked
 	refreshButton.addActionListener(new ActionListener() {
+	    @Override
 	    public void actionPerformed(ActionEvent e) {
 		refreshButtonClicked(e);
 	    }
@@ -169,6 +170,7 @@ public class TypingGUI extends JFrame
 
 	// Set the help button to call its method when clicked
 	helpButton.addActionListener(new ActionListener() {
+	    @Override
 	    public void actionPerformed(ActionEvent e) {
 		helpButtonClicked(e);
 	    }
