@@ -34,11 +34,10 @@ public class TypingGUI extends JFrame
     // Middle-right of GridLayout
     private JLabel wpmLabel; // Labels the words-per-minute field
     private Box statusBox; // Holds the status components on the right side
-    private Box wpmBox; // Horizontal box that goes on the top of the status pane
     private JLabel wpm; // Displays the user's words-per-minute
+    private JLabel wordsTyped; // Displays the number of words the user has typed
     private JLabel timerLabel; // Labels the timer
     private JLabel timerDisplay; // Displays the timer
-    private Box timerBox; // Horizontal box that holds the timer at the bottom of the status pane
 
     //TODO: Bottom-left of GridLayout
 
@@ -77,8 +76,9 @@ public class TypingGUI extends JFrame
 	mainWindowLayout = new GridLayout(3,3);
 	setLayout(mainWindowLayout);
 	setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+	mainWindowLayout.setVgap(10);
 	//TODO: REVISIT THIS mainWindowLayout.setVgap(50);
-	relativeSize = new Dimension(100,100);
+	relativeSize = new Dimension(50,50);
 
 	// setup the top-left of the layout
 	//imageLabel = new JLabel(new ImageIcon(getImage("images/mario_typing.jpg")));
@@ -89,7 +89,7 @@ public class TypingGUI extends JFrame
 	// setup the top-middle of the layout
 	sampleText = new JLabel();
 	sampleLabel = new JLabel();
-	sampleLabel.setText("Sample");
+	sampleLabel.setText("		    Sample");
 	sampleBox = Box.createVerticalBox();
 	sampleBox.add(sampleLabel);
 	sampleBox.add(sampleText);
@@ -125,26 +125,28 @@ public class TypingGUI extends JFrame
 	    }
 	});
 
-	// setup the middle-right of the layout
-	wpmBox = Box.createHorizontalBox();
-	wpmLabel = new JLabel();
-	wpmLabel.setText("WPM");
-	wpmBox.add(wpmLabel);
-	wpm = new JLabel();
-	wpm.setText("0");
-	wpmBox.add(wpm);
-
+	// setup the status panel at the middle-right of the layout
 	statusBox = Box.createVerticalBox();
-	statusBox.add(wpmBox);
-
-	timerBox = Box.createHorizontalBox();
 	timerLabel = new JLabel();
-	timerLabel.setText("Time");
 	timerDisplay = new JLabel();
 	timerDisplay.setText("Start typing sample text to begin test");
-	timerBox.add(timerLabel);
-	timerBox.add(timerDisplay);
-	statusBox.add(timerBox);
+	Box topOfStatus = Box.createHorizontalBox();
+	topOfStatus.add(Box.createHorizontalStrut(10));
+	topOfStatus.add(timerLabel);
+
+	statusBox.add(topOfStatus);
+	statusBox.add(timerDisplay);
+
+	wordsTyped = new JLabel();
+	wordsTyped.setText("Words Typed: 0");
+
+	wpmLabel = new JLabel();
+	wpmLabel.setText("WPM");
+	wpm = new JLabel();
+	wpm.setText("0");
+	statusBox.add(wpmLabel);
+	statusBox.add(wpm);
+	statusBox.add(wordsTyped);
 
 	add(statusBox);
 
@@ -162,7 +164,7 @@ public class TypingGUI extends JFrame
 		refreshButtonClicked(e);
 	    }
 	});
-	
+
 	// initialize the help button
 	helpButton = new JButton();
 	helpButton.setText("HELP");
@@ -188,7 +190,7 @@ public class TypingGUI extends JFrame
 	add(new JLabel("PLACEHOLDER"));
 
 	// set main window size
-	setMinimumSize(new Dimension(800,500));
+	setMinimumSize(new Dimension(400,300));
 	setResizable(false);
 	pack();
 	// make sure the window is visible and focused
@@ -196,10 +198,14 @@ public class TypingGUI extends JFrame
 
 	// Set the window icon
 	setIconImage(getImage("images/keyboard.png"));
-    }	
+    }
 
     private void refreshButtonClicked(ActionEvent e)
     {
+	/**This method is called when the user clicks the "Refresh" button
+	 * It calls refresh() which sets up the user for the next test
+	 */
+
 	System.out.println("SOMEONE CLICKED THE refresh BUTTOHN!!!!!!");
 	System.out.println("BEGINNING THE TEST ALL OVER AGAIN!!!");
 	refresh();
@@ -207,15 +213,26 @@ public class TypingGUI extends JFrame
 
     private void helpButtonClicked(ActionEvent e)
     {
+	/**This method is called when the user clicks the "HELP" button
+	 * It displays a new window with a help message
+	 */
+
 	System.out.println("SOMEONE CLICKED THE HELP BUTTONN!!!!!");
     }
 
     private void inputFieldUpdated()
     {
+	/**This method is called whenever the user types a key in the input
+	 * text field.
+	 * If the test hasn't started yet, it starts the test.
+	 * If the test is in progress, it checks if the user has typed enough characters
+	 * to end the test
+	 */
+
 	if(!testInProgress)
 	    beginTest();
-	
-	System.out.println(inputTextField.getText().length());
+	else
+	    wordsTyped.setText("Words Typed: " + inputTextField.getText().split("\\s").length);
 
 	if((inputTextField.getText().length() + 1) == sampleText.getText().length())
 	    endTest();
@@ -223,27 +240,48 @@ public class TypingGUI extends JFrame
 
     private void beginTest()
     {
+	/**Called when the user starts typing.
+	 * It records the current time and begins the timer
+	 */
+
 	start = Instant.now();
 	timerListener = new ActionListener() {
 	    @Override
 	    public void actionPerformed(ActionEvent e) {
 		timerDisplay.setText(Duration.between(start, Instant.now()).getSeconds()
-			+ ":" + Duration.between(start, Instant.now()).getNano() / 1000000);
+			+ ":" + Duration.between(start, Instant.now()).getNano() / 10000000);
 	    }
 	};
 	timer = new Timer(1, timerListener);
 	timer.start();
+	timerLabel.setText("Time");
 	testInProgress = true;
     }
 
     private void endTest()
     {
+	/**Called when the user types enough characters
+	 * It ends the test and stops the timer
+	 * TODO: Calculate wpm and accuracy
+	 */
+
 	if(testInProgress)
 	{
 	    timer.stop();
+	    calcWPM(Instant.now());
 	    testInProgress = false;
 	    inputTextField.setEditable(false);
 	}
+    }
+
+    private void calcWPM(Instant end)
+    {
+	int numWords = inputTextField.getText().split("\\s").length;
+	long millisElapsed = Duration.between(start,end).toMillis();
+	System.out.println(millisElapsed);
+	double minutesElapsed = millisElapsed / 60000.0;
+	System.out.println(numWords + " / " + minutesElapsed + " = " + Double.toString(numWords / minutesElapsed));
+	wpm.setText(Double.toString(numWords / minutesElapsed));
     }
 
     private BufferedImage getImage(String imagePath)
@@ -252,6 +290,7 @@ public class TypingGUI extends JFrame
 	 * If the image exists in the provided path, return it as a BufferedImage
 	 * Otherwise, return null
 	 */
+
 	BufferedImage icon = null;
 
 	try
@@ -269,9 +308,15 @@ public class TypingGUI extends JFrame
     private void refresh()
     {
 	System.out.println("RESTARTING TEST@!!!!");
+	if(timer != null)
+	    if(timer.isRunning())
+		endTest();
+
 	sampleText.setText(nextSampleText);
 	timerDisplay.setText("Start typing sample text to begin test");
 	inputTextField.setText("");
+	timerDisplay.setText("");
+	timerLabel.setText("");
 	inputTextField.setEditable(true);
 	//TODO: TypingTest will serve another sample string for the user
     }
