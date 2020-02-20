@@ -1,8 +1,11 @@
+import java.awt.event.ActionListener;
+
 public class TypingTest
 {
     public static void main(String[] args)
     {
-	TypingGUI gui = new TypingGUI();
+	String sampleText = "al sass lass lass sass al";
+	TypingGUI gui = new TypingGUI(sampleText);
 	gui.setVisible(true);
     }
 }
