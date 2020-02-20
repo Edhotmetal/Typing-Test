@@ -278,10 +278,8 @@ public class TypingGUI extends JFrame
     {
 	int numWords = inputTextField.getText().split("\\s").length;
 	long millisElapsed = Duration.between(start,end).toMillis();
-	System.out.println(millisElapsed);
 	double minutesElapsed = millisElapsed / 60000.0;
-	System.out.println(numWords + " / " + minutesElapsed + " = " + Double.toString(numWords / minutesElapsed));
-	wpm.setText(Double.toString(numWords / minutesElapsed));
+	wpm.setText(String.format("%3.2f", (numWords / minutesElapsed)));
     }
 
     private BufferedImage getImage(String imagePath)
