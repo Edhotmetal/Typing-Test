@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.event.*;
 import java.awt.*;
 import java.awt.image.*;
@@ -19,8 +20,8 @@ public class TypingTest extends JFrame
 
     // Top-middle of GridLayout
     private JLabel sampleLabel; // Labels the sample text
-    private JLabel sampleText; // Displays the sample text for the user
-    private Box sampleBox; // Holds the sample text and label
+    private JTextArea sampleText; // Displays the sample text for the user
+    private JPanel samplePanel; // Holds the sample label and text
 
     // Top-right of GridLayout
     //TODO: PUT SOMETHING ON THE TOP-RIGHT
@@ -77,8 +78,9 @@ public class TypingTest extends JFrame
 	setLayout(mainWindowLayout);
 	setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 	mainWindowLayout.setVgap(10);
-	//TODO: REVISIT THIS mainWindowLayout.setVgap(50);
 	relativeSize = new Dimension(50,50);
+	// Set the main background color
+	getContentPane().setBackground(new Color(217, 213, 196)); // Sisal
 
 	// setup the top-left of the layout
 	//imageLabel = new JLabel(new ImageIcon(getImage("images/mario_typing.jpg")));
@@ -87,14 +89,28 @@ public class TypingTest extends JFrame
 	add(imageLabel);
 
 	// setup the top-middle of the layout
-	sampleText = new JLabel();
 	sampleLabel = new JLabel();
-	sampleLabel.setText("		    Sample");
-	sampleBox = Box.createVerticalBox();
-	sampleBox.add(sampleLabel);
-	sampleBox.add(sampleText);
-	sampleBox.setPreferredSize(relativeSize);
-	add(sampleBox);
+	sampleLabel.setText("Sample Text");
+	sampleLabel.setMaximumSize(relativeSize);
+	sampleLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+	sampleText = new JTextArea();
+	Border sampleTextBorder = BorderFactory.createLineBorder(new Color(64, 61, 52), 2); // Armadillo
+	sampleText.setBorder(BorderFactory.createCompoundBorder(sampleTextBorder,
+		    BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+
+	sampleText.setBackground(new Color(200, 197, 188)); // Taupe Gray
+	sampleText.setLineWrap(true);
+	sampleText.setWrapStyleWord(true);
+	sampleText.setRows(3);
+	sampleText.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+	GridLayout sampleLayout = new GridLayout(2,1);
+	sampleLayout.setVgap(0);
+	samplePanel = new JPanel(sampleLayout);
+	samplePanel.add(sampleLabel);
+	samplePanel.add(sampleText);
+	add(samplePanel);
 
 	// setup the top-right of the layout
 	add(new JLabel("PLACEHOLDER"));
@@ -104,6 +120,7 @@ public class TypingTest extends JFrame
 
 	// setup the middle of the layout
 	inputTextField = new JTextField();
+	inputTextField.setPreferredSize(relativeSize);
 	add(inputTextField);
 	inputPrompt = new TextPrompt("Begin typing here!", inputTextField);
 	inputPrompt.setForeground(Color.GRAY);
