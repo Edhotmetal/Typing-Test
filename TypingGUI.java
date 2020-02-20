@@ -50,7 +50,6 @@ public class TypingGUI extends JFrame
     //TODO: Bottom-right of GridLayout
 
     private String nextSampleText; // stores the sample text to be displayed in the next text
-    private int sampleLength; // stores the length of the sample text
     private boolean testInProgress; // stores the state of the test
     private Timer timer; // Times the test
     private ActionListener timerListener; // Listens to the timer's actions
@@ -154,7 +153,7 @@ public class TypingGUI extends JFrame
 
 	// initialize the refresh button
 	refreshButton = new JButton();
-	refreshButton.setText("refresh");
+	refreshButton.setText("Refresh");
 
 	// Set the refresh button to call its method when clicked
 	refreshButton.addActionListener(new ActionListener() {
@@ -215,18 +214,21 @@ public class TypingGUI extends JFrame
     {
 	if(!testInProgress)
 	    beginTest();
+	
+	System.out.println(inputTextField.getText().length());
 
-	if(inputTextField.getText().length() == sampleText.getText().length())
+	if((inputTextField.getText().length() + 1) == sampleText.getText().length())
 	    endTest();
     }
 
     private void beginTest()
     {
+	start = Instant.now();
 	timerListener = new ActionListener() {
 	    @Override
 	    public void actionPerformed(ActionEvent e) {
 		timerDisplay.setText(Duration.between(start, Instant.now()).getSeconds()
-			+ ":" + Duration.between(start, Instant.now()).getNano() * 1000000);
+			+ ":" + Duration.between(start, Instant.now()).getNano() / 1000000);
 	    }
 	};
 	timer = new Timer(1, timerListener);
@@ -236,8 +238,12 @@ public class TypingGUI extends JFrame
 
     private void endTest()
     {
-	timer.stop();
-	testInProgress = false;
+	if(testInProgress)
+	{
+	    timer.stop();
+	    testInProgress = false;
+	    inputTextField.setEditable(false);
+	}
     }
 
     private BufferedImage getImage(String imagePath)
@@ -264,9 +270,9 @@ public class TypingGUI extends JFrame
     {
 	System.out.println("RESTARTING TEST@!!!!");
 	sampleText.setText(nextSampleText);
-	sampleLength = nextSampleText.length();
 	timerDisplay.setText("Start typing sample text to begin test");
 	inputTextField.setText("");
+	inputTextField.setEditable(true);
 	//TODO: TypingTest will serve another sample string for the user
     }
 
