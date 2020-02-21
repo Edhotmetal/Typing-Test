@@ -29,7 +29,7 @@ public class TypingTest extends JFrame
     //TODO: Middle-left of GridLayout
 
     // Middle of GridLayout
-    private JTextField inputTextField; // receives input from the user
+    private JTextArea inputTextArea; // receives input from the user
     private TextPrompt inputPrompt; // Provides placeholder text in the input box
     private JLabel inputLabel; // labels the input text field
 
@@ -104,6 +104,7 @@ public class TypingTest extends JFrame
 	sampleText.setWrapStyleWord(true);
 	sampleText.setRows(3);
 	sampleText.setAlignmentX(Component.CENTER_ALIGNMENT);
+	sampleText.setEditable(false);
 
 	GridLayout sampleLayout = new GridLayout(2,1);
 	sampleLayout.setVgap(0);
@@ -119,18 +120,20 @@ public class TypingTest extends JFrame
 	add(new JLabel("PLACEHOLDER"));
 
 	// setup the middle of the layout
-	inputTextField = new JTextField();
-	inputTextField.setPreferredSize(relativeSize);
-	add(inputTextField);
-	inputPrompt = new TextPrompt("Begin typing here!", inputTextField);
+	inputTextArea = new JTextArea();
+	inputTextArea.setPreferredSize(relativeSize);
+	inputTextArea.setLineWrap(true);
+	inputTextArea.setWrapStyleWord(true);
+	add(inputTextArea);
+	inputPrompt = new TextPrompt("Begin typing here!", inputTextArea);
 	inputPrompt.setForeground(Color.GRAY);
 	inputPrompt.changeAlpha(0.5f);
 
 	// listen for the user's typing
-	inputTextField.addKeyListener(new KeyListener() {
+	inputTextArea.addKeyListener(new KeyListener() {
 	    @Override
 	    public void keyTyped(KeyEvent e) {
-		inputFieldUpdated();
+		inputFieldUpdated(e);
 	    }
 
 	    @Override
@@ -237,7 +240,7 @@ public class TypingTest extends JFrame
 	System.out.println("SOMEONE CLICKED THE HELP BUTTONN!!!!!");
     }
 
-    private void inputFieldUpdated()
+    private void inputFieldUpdated(KeyEvent e)
     {
 	/**This method is called whenever the user types a key in the input
 	 * text field.
@@ -247,12 +250,20 @@ public class TypingTest extends JFrame
 	 */
 
 	if(!testInProgress)
-	    beginTest();
+	{
+	    if(!(inputTextArea.getText().length() == sampleText.getText().length()))
+		beginTest();
+	}
 	else
-	    wordsTyped.setText("Words Typed: " + inputTextField.getText().split("\\s").length);
+	    wordsTyped.setText("Words Typed: " + inputTextArea.getText().split("\\s").length);
 
-	if((inputTextField.getText().length() + 1) == sampleText.getText().length())
+	if((inputTextArea.getText().length()) + 1 == sampleText.getText().length())
+	{
+	    // Add the last character the user inputted
+	    // Otherwise, it won't show up in the text area
+	    inputTextArea.setText(inputTextArea.getText() + e.getKeyChar());
 	    endTest();
+	}
     }
 
     private void beginTest()
@@ -287,7 +298,7 @@ public class TypingTest extends JFrame
 	    timer.stop();
 	    calcWPM(Instant.now());
 	    testInProgress = false;
-	    inputTextField.setEditable(false);
+	    inputTextArea.setEditable(false);
 	}
     }
 
@@ -300,9 +311,9 @@ public class TypingTest extends JFrame
 	 */
 
 	// check if the test was completed or interrupted by the user clicking refresh
-	if(inputTextField.getText().length() == sampleText.getText().length())
+	if(inputTextArea.getText().length() == sampleText.getText().length())
 	{
-	    int numWords = inputTextField.getText().split("\\s").length;
+	    int numWords = inputTextArea.getText().split("\\s").length;
 	    long millisElapsed = Duration.between(start,end).toMillis();
 	    double minutesElapsed = millisElapsed / 60000.0;
 	    wpm.setText(String.format("%3.2f", (numWords / minutesElapsed)));
@@ -350,9 +361,9 @@ public class TypingTest extends JFrame
 
 	sampleText.setText(nextSampleText);
 	timerDisplay.setText("Start typing sample text to begin test");
-	inputTextField.setText("");
+	inputTextArea.setText("");
 	timerLabel.setText("");
-	inputTextField.setEditable(true);
+	inputTextArea.setEditable(true);
     }
 
     public void setSampleText(String text)
