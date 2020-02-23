@@ -27,14 +27,19 @@ public class TypingTest extends JFrame
     // Top-right of GridLayout
     //TODO: PUT SOMETHING ON THE TOP-RIGHT
 
-    //TODO: Middle-left of GridLayout
-
-    // Middle of GridLayout
+    // bottom-Middle of GridLayout
     private JTextArea inputTextArea; // receives input from the user
     private TextPrompt inputPrompt; // Provides placeholder text in the input box
     private JLabel inputLabel; // labels the input text field
 
-    // Middle-right of GridLayout
+    private JButton refreshButton; // Restarts the test when clicked
+    private JButton helpButton; // Displays a help window when clicked
+    private JPanel buttonPanel; // Holds the buttons at the bottom of the window
+    private GridLayout buttonLayout; // arranges the buttons on their panel
+    private Box inputPanel; // Holds the input text field and buttons
+    private GridLayout inputLayout; // holds the input text field and button panel
+
+    // bottom-right of GridLayout
     private JLabel wpmLabel; // Labels the words-per-minute field
     private Box statusBox; // Holds the status components on the right side
     private JLabel wpm; // Displays the user's words-per-minute
@@ -42,15 +47,6 @@ public class TypingTest extends JFrame
     private JLabel timerLabel; // Labels the timer
     private JLabel timerDisplay; // Displays the timer
 
-    //TODO: Bottom-left of GridLayout
-
-    // Bottom-middle of GridLayout
-    private JButton refreshButton; // Restarts the test when clicked
-    private JButton helpButton; // Displays a help window when clicked
-    private JPanel buttonPanel; // Holds the buttons at the bottom of the window
-    private GridLayout buttonLayout; // arranges the buttons on their panel
-
-    //TODO: Bottom-right of GridLayout
 
     private String nextSampleText; // stores the sample text to be displayed in the next text
     private boolean testInProgress; // stores the state of the test
@@ -80,7 +76,7 @@ public class TypingTest extends JFrame
 	setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
 	// set the main window's layout
-	mainWindowLayout = new GridLayout(3,3);
+	mainWindowLayout = new GridLayout(2,3); // 2 rows, 3 columns
 	setLayout(mainWindowLayout);
 	setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 	mainWindowLayout.setVgap(10);
@@ -129,16 +125,18 @@ public class TypingTest extends JFrame
 	// setup the top-right of the layout
 	add(new JLabel("PLACEHOLDER"));
 
-	// setup the middle-left of the layout
+	// setup the bottom-left of the layout
 	add(new JLabel("PLACEHOLDER"));
 
-	// setup the middle of the layout
+	// setup the bottom-middle of the layout
+	inputPanel = Box.createVerticalBox();
+
 	inputTextArea = new JTextArea();
 	inputTextArea.setAlignmentX(Component.CENTER_ALIGNMENT);
 	inputTextArea.setLineWrap(true);
 	inputTextArea.setWrapStyleWord(true);
 	inputTextArea.setRows(3);
-	add(inputTextArea);
+	inputPanel.add(inputTextArea);
 	inputPrompt = new TextPrompt("Begin typing here!", inputTextArea);
 	inputPrompt.setForeground(Color.GRAY);
 	inputPrompt.changeAlpha(0.5f);
@@ -158,31 +156,7 @@ public class TypingTest extends JFrame
 	    public void keyPressed(KeyEvent e) {
 	    }
 	});
-
-	// setup the status panel at the middle-right of the layout
-	statusBox = Box.createVerticalBox();
-	timerLabel = new JLabel();
-	timerDisplay = new JLabel();
-
-	statusBox.add(timerLabel);
-	statusBox.add(timerDisplay);
-
-	wordsTyped = new JLabel();
-	wordsTyped.setText("Words Typed: 0");
-
-	wpmLabel = new JLabel();
-	wpmLabel.setText("WPM");
-	wpm = new JLabel();
-	wpm.setText("0");
-	statusBox.add(wpmLabel);
-	statusBox.add(wpm);
-	statusBox.add(wordsTyped);
-
-	add(statusBox);
-
-	// setup the bottom-left of the layout
-	add(new JLabel("PLACEHOLDER"));
-
+	
 	// initialize the refresh button
 	refreshButton = new JButton();
 	refreshButton.setText("Refresh");
@@ -221,12 +195,33 @@ public class TypingTest extends JFrame
 	helpButton.setBackground(armadillo);
 	helpButton.setForeground(sisal);
 
-	// setup the bottom-middle of the layout
-	add(buttonPanel);
+	inputPanel.add(buttonPanel);
+	add(inputPanel);
 
-	// setup the bottom-right of the layout
-	add(new JLabel("PLACEHOLDER"));
 
+
+	// setup the status panel at the bottom-right of the layout
+	statusBox = Box.createVerticalBox();
+	timerLabel = new JLabel();
+	timerDisplay = new JLabel();
+
+	statusBox.add(timerLabel);
+	statusBox.add(timerDisplay);
+
+	wordsTyped = new JLabel();
+	wordsTyped.setText("Words Typed: 0");
+
+	wpmLabel = new JLabel();
+	wpmLabel.setText("WPM");
+	wpm = new JLabel();
+	wpm.setText("0");
+	statusBox.add(wpmLabel);
+	statusBox.add(wpm);
+	statusBox.add(wordsTyped);
+
+	add(statusBox);
+
+	
 	// set main window size
 	setMinimumSize(new Dimension(1000,500)); // Width: 1000, Height: 500
 	setResizable(false);
