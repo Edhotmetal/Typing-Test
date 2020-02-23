@@ -54,6 +54,7 @@ public class TypingTest extends JFrame
     private JLabel wordsTyped; // Displays the number of words the user has typed
     private JLabel timerLabel; // Labels the timer
     private JLabel timerDisplay; // Displays the timer
+    private JLabel accuracy; // Displays the user's typing accuracy
 
 
     private String nextsampleTextPane; // stores the sample text to be displayed in the next text
@@ -224,17 +225,21 @@ public class TypingTest extends JFrame
 	wpm.setText("0");
 	wpm.setFont(statusFont);
 
+	accuracy = new JLabel();
+	accuracy.setText("Accuracy: N/A");
+	accuracy.setFont(statusFont);
+
 	statusPanel.add(timerLabel);
 	statusPanel.add(wpmLabel);
 	statusPanel.add(timerDisplay);
 	statusPanel.add(wpm);
-	statusPanel.add(new JLabel()); // empty filler label
+	statusPanel.add(accuracy);
 	statusPanel.add(wordsTyped);
-	
+
 	add(statusPanel);
 
 	// set main window size
-	setMinimumSize(new Dimension(800,300)); // Width: 1000, Height: 500
+	setMinimumSize(new Dimension(800,300)); // Width: 800, Height: 300
 	setResizable(false);
 	pack();
 	// make sure the window is visible and focused
