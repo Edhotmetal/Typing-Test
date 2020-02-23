@@ -16,7 +16,8 @@ public class TypingTest extends JFrame
     //TODO: Finish all the components!
 
     // Top-left of GridLayout
-    private JLabel imageLabel; // Displays an image on the top left corner
+    private JTextArea title; // Displays the title on the top left
+    private Font titleFont; // The font for the title
 
     // Top-middle of GridLayout
     private JLabel sampleLabel; // Labels the sample text
@@ -46,7 +47,8 @@ public class TypingTest extends JFrame
     // Bottom-middle of GridLayout
     private JButton refreshButton; // Restarts the test when clicked
     private JButton helpButton; // Displays a help window when clicked
-    private Box buttonPanel; // Holds the buttons at the bottom of the window
+    private JPanel buttonPanel; // Holds the buttons at the bottom of the window
+    private GridLayout buttonLayout; // arranges the buttons on their panel
 
     //TODO: Bottom-right of GridLayout
 
@@ -70,6 +72,10 @@ public class TypingTest extends JFrame
 	/** initComponents:
 	* Called by the constructor to initialize the form
 	**/
+	// COLORSCHEME
+	Color armadillo = new Color(64,61,52);
+	Color sisal = new Color(217,213,196);
+
 	setTitle("Typing Test");
 	setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -80,13 +86,19 @@ public class TypingTest extends JFrame
 	mainWindowLayout.setVgap(10);
 	relativeSize = new Dimension(50,50);
 	// Set the main background color
-	getContentPane().setBackground(new Color(217, 213, 196)); // Sisal
+	getContentPane().setBackground(sisal);
 
 	// setup the top-left of the layout
-	//imageLabel = new JLabel(new ImageIcon(getImage("images/mario_typing.jpg")));
-	imageLabel = new JLabel("PLACEHOLDER");
-	imageLabel.setPreferredSize(relativeSize);
-	add(imageLabel);
+	title = new JTextArea();
+	title.setText("TYPING TEST");
+	title.setEditable(false);
+	title.setLineWrap(true);
+	title.setWrapStyleWord(true);
+	titleFont = new Font(Font.SERIF, Font.BOLD, 48);
+	title.setFont(titleFont);
+	title.setPreferredSize(relativeSize);
+	title.setBackground(sisal);
+	add(title);
 
 	// setup the top-middle of the layout
 	sampleLabel = new JLabel();
@@ -95,11 +107,11 @@ public class TypingTest extends JFrame
 	sampleLabel.setHorizontalAlignment(SwingConstants.LEFT);
 
 	sampleText = new JTextArea();
-	Border sampleTextBorder = BorderFactory.createLineBorder(new Color(64, 61, 52), 2); // Armadillo
+	Border sampleTextBorder = BorderFactory.createLineBorder(armadillo, 2);
 	sampleText.setBorder(BorderFactory.createCompoundBorder(sampleTextBorder,
 		    BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
-	sampleText.setBackground(new Color(200, 197, 188)); // Taupe Gray
+	sampleText.setBackground(new Color(200, 197, 188)); //TODO: FIX THIS Taupe Gray
 	sampleText.setLineWrap(true);
 	sampleText.setWrapStyleWord(true);
 	sampleText.setRows(3);
@@ -109,6 +121,7 @@ public class TypingTest extends JFrame
 	GridLayout sampleLayout = new GridLayout(2,1);
 	sampleLayout.setVgap(0);
 	samplePanel = new JPanel(sampleLayout);
+	samplePanel.setBackground(sisal);
 	samplePanel.add(sampleLabel);
 	samplePanel.add(sampleText);
 	add(samplePanel);
@@ -121,14 +134,15 @@ public class TypingTest extends JFrame
 
 	// setup the middle of the layout
 	inputTextArea = new JTextArea();
-	inputTextArea.setPreferredSize(relativeSize);
+	inputTextArea.setAlignmentX(Component.CENTER_ALIGNMENT);
 	inputTextArea.setLineWrap(true);
 	inputTextArea.setWrapStyleWord(true);
+	inputTextArea.setRows(3);
 	add(inputTextArea);
 	inputPrompt = new TextPrompt("Begin typing here!", inputTextArea);
 	inputPrompt.setForeground(Color.GRAY);
 	inputPrompt.changeAlpha(0.5f);
-
+	
 	// listen for the user's typing
 	inputTextArea.addKeyListener(new KeyListener() {
 	    @Override
@@ -149,12 +163,8 @@ public class TypingTest extends JFrame
 	statusBox = Box.createVerticalBox();
 	timerLabel = new JLabel();
 	timerDisplay = new JLabel();
-	timerDisplay.setText("Start typing sample text to begin test");
-	Box topOfStatus = Box.createHorizontalBox();
-	topOfStatus.add(timerLabel);
-	topOfStatus.add(Box.createHorizontalStrut(10));
 
-	statusBox.add(topOfStatus);
+	statusBox.add(timerLabel);
 	statusBox.add(timerDisplay);
 
 	wordsTyped = new JLabel();
@@ -198,10 +208,18 @@ public class TypingTest extends JFrame
 	});
 
 	// Initialize the button panel
-	buttonPanel = Box.createHorizontalBox();
+	buttonPanel = new JPanel();
+	buttonLayout = new GridLayout(1,2); // 1 row, 2 columns
+	buttonLayout.setHgap(10);
+	buttonPanel.setLayout(buttonLayout);
 	// add buttons to button panel
 	buttonPanel.add(refreshButton);
 	buttonPanel.add(helpButton);
+	buttonPanel.setBackground(sisal);
+	refreshButton.setBackground(armadillo);
+	refreshButton.setForeground(sisal);
+	helpButton.setBackground(armadillo);
+	helpButton.setForeground(sisal);
 
 	// setup the bottom-middle of the layout
 	add(buttonPanel);
@@ -210,7 +228,7 @@ public class TypingTest extends JFrame
 	add(new JLabel("PLACEHOLDER"));
 
 	// set main window size
-	setMinimumSize(new Dimension(450,350));
+	setMinimumSize(new Dimension(1000,500)); // Width: 1000, Height: 500
 	setResizable(false);
 	pack();
 	// make sure the window is visible and focused
@@ -360,9 +378,9 @@ public class TypingTest extends JFrame
 	setSampleText(sampleTextArray[randInt]);
 
 	sampleText.setText(nextSampleText);
-	timerDisplay.setText("Start typing sample text to begin test");
+	timerDisplay.setText("");
 	inputTextArea.setText("");
-	timerLabel.setText("");
+	timerLabel.setText("Start typing sample text to begin test");
 	inputTextArea.setEditable(true);
     }
 
