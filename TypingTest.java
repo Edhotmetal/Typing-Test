@@ -9,6 +9,12 @@ import java.time.Instant;
 import java.time.Duration;
 import java.lang.Math;
 
+// imports for highlighting errors
+import javax.swing.text.AttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+
 public class TypingTest extends JFrame
 {
     private GridLayout mainWindowLayout; // The overall layout of the window
@@ -73,7 +79,6 @@ public class TypingTest extends JFrame
 	// COLORSCHEME
 	Color armadillo = new Color(64,61,52);
 	Color sisal = new Color(217,213,196);
-	Color fuscous = new Color(81,77,68); // fuscous gray
 
 	setTitle("Typing Test");
 	setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -105,15 +110,14 @@ public class TypingTest extends JFrame
 	sampleTextPane.setBorder(BorderFactory.createCompoundBorder(sampleTextPaneBorder,
 		    BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
-	sampleTextPane.setBackground(new Color(200, 197, 188)); //TODO: FIX THIS Taupe Gray
+	sampleTextPane.setBackground(new Color(200, 197, 188));
 	sampleTextPane.setAlignmentX(Component.CENTER_ALIGNMENT);
 	sampleTextPane.setEditable(false);
 
 	GridLayout sampleLayout = new GridLayout(1,1);
-	sampleLayout.setVgap(0);
+	sampleLayout.setVgap(3);
 	samplePanel = new JPanel(sampleLayout);
 	samplePanel.setBackground(sisal);
-	//samplePanel.add(sampleLabel);
 	samplePanel.add(sampleTextPane);
 	add(samplePanel);
 
@@ -130,7 +134,7 @@ public class TypingTest extends JFrame
 	inputPanel = Box.createVerticalBox();
 
 	inputTextPane = new JTextPane();
-	inputTextPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+	inputTextPane.setMargin(new Insets(5, 5, 5, 5));
 	inputPanel.add(inputTextPane);
 	inputPrompt = new TextPrompt("Begin typing here!", inputTextPane);
 	inputPrompt.setForeground(Color.GRAY);
@@ -200,21 +204,25 @@ public class TypingTest extends JFrame
 	statusPanel.setLayout(statusLayout);
 	statusPanel.setBackground(sisal);
 	statusLayout.setHgap(10);
-	statusLayout.setVgap(10);
+	statusLayout.setVgap(0);
+	statusFont = new Font(Font.SERIF, Font.BOLD, 18);
 
 	timerLabel = new JLabel();
-	timerLabel.setText("Time");
+	timerLabel.setText("Time (s:ms)");
+	timerLabel.setFont(statusFont);
 	timerDisplay = new JLabel();
+	timerDisplay.setFont(statusFont);
 
 	wordsTyped = new JLabel();
 	wordsTyped.setText("Words Typed: 0");
+	wordsTyped.setFont(statusFont);
 
 	wpmLabel = new JLabel();
 	wpmLabel.setText("WPM");
-	wpmLabel.setFont(new Font(Font.SERIF, Font.BOLD, 18));
+	wpmLabel.setFont(statusFont);
 	wpm = new JLabel();
 	wpm.setText("0");
-	wpm.setFont(new Font(Font.SERIF, Font.BOLD, 18));
+	wpm.setFont(statusFont);
 
 	statusPanel.add(timerLabel);
 	statusPanel.add(wpmLabel);
@@ -263,6 +271,7 @@ public class TypingTest extends JFrame
 	 * If the test hasn't started yet, it starts the test.
 	 * If the test is in progress, it checks if the user has typed enough characters
 	 * to end the test
+	 * TODO It also checks the user's input and displays errors in real-time
 	 */
 
 	if(!testInProgress)
@@ -271,10 +280,15 @@ public class TypingTest extends JFrame
 		beginTest();
 	}
 	else
+	{
 	    wordsTyped.setText("Words Typed: " + inputTextPane.getText().split("\\s").length);
+	    checkAccuracy(e.getKeyChar());
+	    	}
 
+	
 	if((inputTextPane.getText().length()) + 1 == sampleTextPane.getText().length())
 	{
+	    // When the test ends,
 	    // Add the last character the user inputted
 	    // Otherwise, it won't show up in the text area
 	    inputTextPane.setText(inputTextPane.getText() + e.getKeyChar());
@@ -339,6 +353,64 @@ public class TypingTest extends JFrame
 	    wpm.setText("0");
     }
 
+    private void checkAccuracy(char c)
+    {
+	/** Every time the user types a character, this method checks for accuracy
+	 * and displays errors in real-time by highlighting them in the
+	 * input text pane.
+	 */
+	// The input text pane hasn't been updated with the user's latest input so
+	// we must add it here
+	String input = (inputTextPane.getText() + Character.toString(c));
+	String sample = sampleTextPane.getText();
+	boolean[] errors = new boolean[input.length()];
+
+	// iterate through the input, checking it against the sample
+	// and highlighting errors
+	for(int i = 0; i < input.length(); i++)
+	    if(input.charAt(i) != sample.charAt(i))
+		errors[i] = true;
+
+	highlight(errors, c);
+    }
+
+    private void highlight(boolean[] errors, char c)
+    {
+	/** Highlights the characters in the input text pane
+	 * specified by the errors array
+	 */
+
+	String text = inputTextPane.getText() + Character.toString(c);
+	inputTextPane.setText("");
+
+	for(int i = 0; i < errors.length; i++)
+	{
+	    if(errors[i] == true)
+		appendToInput(Character.toString(text.charAt(i)), Color.RED);
+	    else
+		appendToInput(Character.toString(text.charAt(i)), Color.BLACK);
+	}
+	
+	// The process of validating input will have duplicated the input
+	// so we need to remove the extra character
+	inputTextPane.setText(
+		inputTextPane.getText().substring(0,inputTextPane.getText().length() - 1));
+    }
+
+    private void appendToInput(String msg, Color c)
+    {
+	StyleContext sc = StyleContext.getDefaultStyleContext();
+	AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
+
+	aset = sc.addAttribute(aset, StyleConstants.FontFamily, "Lucida Console");
+	aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
+
+	int len = inputTextPane.getDocument().getLength();
+	inputTextPane.setCaretPosition(len);
+	inputTextPane.setCharacterAttributes(aset, false);
+	inputTextPane.replaceSelection(msg);
+    }
+
     private BufferedImage getImage(String imagePath)
     {
 	/** Receives an image path
@@ -377,10 +449,12 @@ public class TypingTest extends JFrame
 	setsampleTextPane(sampleTextPaneArray[randInt]);
 
 	sampleTextPane.setText(nextsampleTextPane);
-	timerDisplay.setText("");
+	timerDisplay.setText("0:0");
 	inputTextPane.setText("");
-	testStatusLabel.setText("<html><p>Start typing sample text to begin test</p></html>");
 	inputTextPane.setEditable(true);
+	testStatusLabel.setText("<html><p>Start typing sample text to begin test</p></html>");
+	wpm.setText("0");
+	wordsTyped.setText("Words Typed: 0");
     }
 
     public void setsampleTextPane(String text)
