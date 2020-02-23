@@ -439,7 +439,7 @@ public class TypingTest extends JFrame
 	 * Not when the test ends
 	 */
 
-	System.out.println("RESTARTING TEST@!!!!");
+	System.out.println("RESTARTING TEST");
 	if(timer != null)
 	    if(timer.isRunning())
 		endTest();
