@@ -20,15 +20,15 @@ public class TypingTest extends JFrame
     private Font titleFont; // The font for the title
 
     // Top-middle of GridLayout
-    private JLabel sampleLabel; // Labels the sample text
-    private JTextArea sampleText; // Displays the sample text for the user
+    private JTextPane sampleTextPane; // Displays the sample text for the user
     private JPanel samplePanel; // Holds the sample label and text
 
     // Top-right of GridLayout
-    //TODO: PUT SOMETHING ON THE TOP-RIGHT
+    private JLabel testStatusLabel; // displays the current status of the test
+    private Font testStatusFont; // the font of the test status label
 
     // bottom-Middle of GridLayout
-    private JTextArea inputTextArea; // receives input from the user
+    private JTextPane inputTextPane; // receives input from the user
     private TextPrompt inputPrompt; // Provides placeholder text in the input box
     private JLabel inputLabel; // labels the input text field
 
@@ -40,15 +40,17 @@ public class TypingTest extends JFrame
     private GridLayout inputLayout; // holds the input text field and button panel
 
     // bottom-right of GridLayout
+    private JPanel statusPanel; // holds the status components on the right
+    private GridLayout statusLayout; // arranges the status components
+    private Font statusFont; // the font of the status components
     private JLabel wpmLabel; // Labels the words-per-minute field
-    private Box statusBox; // Holds the status components on the right side
     private JLabel wpm; // Displays the user's words-per-minute
     private JLabel wordsTyped; // Displays the number of words the user has typed
     private JLabel timerLabel; // Labels the timer
     private JLabel timerDisplay; // Displays the timer
 
 
-    private String nextSampleText; // stores the sample text to be displayed in the next text
+    private String nextsampleTextPane; // stores the sample text to be displayed in the next text
     private boolean testInProgress; // stores the state of the test
     private Timer timer; // Times the test
     private ActionListener timerListener; // Listens to the timer's actions
@@ -71,6 +73,7 @@ public class TypingTest extends JFrame
 	// COLORSCHEME
 	Color armadillo = new Color(64,61,52);
 	Color sisal = new Color(217,213,196);
+	Color fuscous = new Color(81,77,68); // fuscous gray
 
 	setTitle("Typing Test");
 	setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -80,6 +83,7 @@ public class TypingTest extends JFrame
 	setLayout(mainWindowLayout);
 	setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 	mainWindowLayout.setVgap(10);
+	mainWindowLayout.setHgap(10);
 	relativeSize = new Dimension(50,50);
 	// Set the main background color
 	getContentPane().setBackground(sisal);
@@ -96,34 +100,28 @@ public class TypingTest extends JFrame
 	title.setBackground(sisal);
 	add(title);
 
-	// setup the top-middle of the layout
-	sampleLabel = new JLabel();
-	sampleLabel.setText("Sample Text");
-	sampleLabel.setMaximumSize(relativeSize);
-	sampleLabel.setHorizontalAlignment(SwingConstants.LEFT);
-
-	sampleText = new JTextArea();
-	Border sampleTextBorder = BorderFactory.createLineBorder(armadillo, 2);
-	sampleText.setBorder(BorderFactory.createCompoundBorder(sampleTextBorder,
+	sampleTextPane = new JTextPane();
+	Border sampleTextPaneBorder = BorderFactory.createLineBorder(armadillo, 2);
+	sampleTextPane.setBorder(BorderFactory.createCompoundBorder(sampleTextPaneBorder,
 		    BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
-	sampleText.setBackground(new Color(200, 197, 188)); //TODO: FIX THIS Taupe Gray
-	sampleText.setLineWrap(true);
-	sampleText.setWrapStyleWord(true);
-	sampleText.setRows(3);
-	sampleText.setAlignmentX(Component.CENTER_ALIGNMENT);
-	sampleText.setEditable(false);
+	sampleTextPane.setBackground(new Color(200, 197, 188)); //TODO: FIX THIS Taupe Gray
+	sampleTextPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+	sampleTextPane.setEditable(false);
 
-	GridLayout sampleLayout = new GridLayout(2,1);
+	GridLayout sampleLayout = new GridLayout(1,1);
 	sampleLayout.setVgap(0);
 	samplePanel = new JPanel(sampleLayout);
 	samplePanel.setBackground(sisal);
-	samplePanel.add(sampleLabel);
-	samplePanel.add(sampleText);
+	//samplePanel.add(sampleLabel);
+	samplePanel.add(sampleTextPane);
 	add(samplePanel);
 
 	// setup the top-right of the layout
-	add(new JLabel("PLACEHOLDER"));
+	testStatusLabel = new JLabel();
+	testStatusFont = new Font(Font.SERIF, Font.BOLD, 24);
+	testStatusLabel.setFont(testStatusFont);
+	add(testStatusLabel);
 
 	// setup the bottom-left of the layout
 	add(new JLabel("PLACEHOLDER"));
@@ -131,18 +129,15 @@ public class TypingTest extends JFrame
 	// setup the bottom-middle of the layout
 	inputPanel = Box.createVerticalBox();
 
-	inputTextArea = new JTextArea();
-	inputTextArea.setAlignmentX(Component.CENTER_ALIGNMENT);
-	inputTextArea.setLineWrap(true);
-	inputTextArea.setWrapStyleWord(true);
-	inputTextArea.setRows(3);
-	inputPanel.add(inputTextArea);
-	inputPrompt = new TextPrompt("Begin typing here!", inputTextArea);
+	inputTextPane = new JTextPane();
+	inputTextPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+	inputPanel.add(inputTextPane);
+	inputPrompt = new TextPrompt("Begin typing here!", inputTextPane);
 	inputPrompt.setForeground(Color.GRAY);
 	inputPrompt.changeAlpha(0.5f);
 	
 	// listen for the user's typing
-	inputTextArea.addKeyListener(new KeyListener() {
+	inputTextPane.addKeyListener(new KeyListener() {
 	    @Override
 	    public void keyTyped(KeyEvent e) {
 		inputFieldUpdated(e);
@@ -199,31 +194,39 @@ public class TypingTest extends JFrame
 	add(inputPanel);
 
 
-
 	// setup the status panel at the bottom-right of the layout
-	statusBox = Box.createVerticalBox();
-	timerLabel = new JLabel();
-	timerDisplay = new JLabel();
+	statusPanel = new JPanel();
+	statusLayout = new GridLayout(3,2); // 3 rows, 2 columns
+	statusPanel.setLayout(statusLayout);
+	statusPanel.setBackground(sisal);
+	statusLayout.setHgap(10);
+	statusLayout.setVgap(10);
 
-	statusBox.add(timerLabel);
-	statusBox.add(timerDisplay);
+	timerLabel = new JLabel();
+	timerLabel.setText("Time");
+	timerDisplay = new JLabel();
 
 	wordsTyped = new JLabel();
 	wordsTyped.setText("Words Typed: 0");
 
 	wpmLabel = new JLabel();
 	wpmLabel.setText("WPM");
+	wpmLabel.setFont(new Font(Font.SERIF, Font.BOLD, 18));
 	wpm = new JLabel();
 	wpm.setText("0");
-	statusBox.add(wpmLabel);
-	statusBox.add(wpm);
-	statusBox.add(wordsTyped);
+	wpm.setFont(new Font(Font.SERIF, Font.BOLD, 18));
 
-	add(statusBox);
-
+	statusPanel.add(timerLabel);
+	statusPanel.add(wpmLabel);
+	statusPanel.add(timerDisplay);
+	statusPanel.add(wpm);
+	statusPanel.add(new JLabel()); // empty filler label
+	statusPanel.add(wordsTyped);
 	
+	add(statusPanel);
+
 	// set main window size
-	setMinimumSize(new Dimension(1000,500)); // Width: 1000, Height: 500
+	setMinimumSize(new Dimension(800,300)); // Width: 1000, Height: 500
 	setResizable(false);
 	pack();
 	// make sure the window is visible and focused
@@ -264,17 +267,17 @@ public class TypingTest extends JFrame
 
 	if(!testInProgress)
 	{
-	    if(!(inputTextArea.getText().length() == sampleText.getText().length()))
+	    if(!(inputTextPane.getText().length() == sampleTextPane.getText().length()))
 		beginTest();
 	}
 	else
-	    wordsTyped.setText("Words Typed: " + inputTextArea.getText().split("\\s").length);
+	    wordsTyped.setText("Words Typed: " + inputTextPane.getText().split("\\s").length);
 
-	if((inputTextArea.getText().length()) + 1 == sampleText.getText().length())
+	if((inputTextPane.getText().length()) + 1 == sampleTextPane.getText().length())
 	{
 	    // Add the last character the user inputted
 	    // Otherwise, it won't show up in the text area
-	    inputTextArea.setText(inputTextArea.getText() + e.getKeyChar());
+	    inputTextPane.setText(inputTextPane.getText() + e.getKeyChar());
 	    endTest();
 	}
     }
@@ -311,7 +314,8 @@ public class TypingTest extends JFrame
 	    timer.stop();
 	    calcWPM(Instant.now());
 	    testInProgress = false;
-	    inputTextArea.setEditable(false);
+	    inputTextPane.setEditable(false);
+	    testStatusLabel.setText("Test completed");
 	}
     }
 
@@ -324,9 +328,9 @@ public class TypingTest extends JFrame
 	 */
 
 	// check if the test was completed or interrupted by the user clicking refresh
-	if(inputTextArea.getText().length() == sampleText.getText().length())
+	if(inputTextPane.getText().length() == sampleTextPane.getText().length())
 	{
-	    int numWords = inputTextArea.getText().split("\\s").length;
+	    int numWords = inputTextPane.getText().split("\\s").length;
 	    long millisElapsed = Duration.between(start,end).toMillis();
 	    double minutesElapsed = millisElapsed / 60000.0;
 	    wpm.setText(String.format("%3.2f", (numWords / minutesElapsed)));
@@ -369,25 +373,25 @@ public class TypingTest extends JFrame
 		endTest();
 
 	// Choose a new random sample string to test the user
-	int randInt =  (int) (Math.random() * sampleTextArray.length);
-	setSampleText(sampleTextArray[randInt]);
+	int randInt =  (int) (Math.random() * sampleTextPaneArray.length);
+	setsampleTextPane(sampleTextPaneArray[randInt]);
 
-	sampleText.setText(nextSampleText);
+	sampleTextPane.setText(nextsampleTextPane);
 	timerDisplay.setText("");
-	inputTextArea.setText("");
-	timerLabel.setText("Start typing sample text to begin test");
-	inputTextArea.setEditable(true);
+	inputTextPane.setText("");
+	testStatusLabel.setText("<html><p>Start typing sample text to begin test</p></html>");
+	inputTextPane.setEditable(true);
     }
 
-    public void setSampleText(String text)
+    public void setsampleTextPane(String text)
     {
-	/**Receives sample text and stores it in nextSampleText
+	/**Receives sample text and stores it in nextsampleTextPane
 	 */
-	nextSampleText = text;
+	nextsampleTextPane = text;
     }
 
     // An array of sample texts that the user must type!
-    String[] sampleTextArray = new String[]{"al sass lass as lass sass al",
+    String[] sampleTextPaneArray = new String[]{"al sass lass as lass sass al",
 			";a as la s; ;; ll ss a ss a",
 			"The quick brown fox jumps over the lazy dog",
 			"The baker needs to knead the dough with pizzaz",
