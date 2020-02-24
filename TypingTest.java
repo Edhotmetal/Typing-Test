@@ -63,23 +63,6 @@ public class TypingTest extends JFrame
     {
 	/** Create new form TypingTest
 	 */
-	System.out.println("Setting Nimbus Look and Feel");
-	try
-	{
-	    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
-	    {
-		if("Nimubs".equals(info.getName()))
-		{
-		    UIManager.setLookAndFeel(info.getClassName());
-		    break;
-		}
-	    }
-	}
-	catch (Exception e)
-	{
-	    System.out.println("Unable to set Nimbus Look and Feel");
-	}
-
 	System.out.println("Initializing GUI");
 	initComponents();
 	restart();
