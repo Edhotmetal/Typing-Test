@@ -16,7 +16,6 @@ import javax.swing.text.BadLocationException;
 public class TypingTest extends JFrame
 {
     private GridLayout mainWindowLayout; // The overall layout of the window
-    private Dimension relativeSize; // The relative size of the components in the layout
     //TODO: Finish all the components!
 
     // Top-left of GridLayout
@@ -38,7 +37,6 @@ public class TypingTest extends JFrame
     private JLabel inputLabel; // labels the input text field
 
     private JButton refreshButton; // Restarts the test when clicked
-    private JButton helpButton; // Displays a help window when clicked
     private JPanel buttonPanel; // Holds the buttons at the bottom of the window
     private GridLayout buttonLayout; // arranges the buttons on their panel
     private Box inputPanel; // Holds the input text field and buttons
@@ -56,7 +54,7 @@ public class TypingTest extends JFrame
     private JLabel accuracy; // Displays the user's typing accuracy
 
 
-    private String nextsampleTextPane; // stores the sample text to be displayed in the next text
+    private String nextSampleText; // stores the sample text to be displayed in the next text
     private boolean testInProgress; // stores the state of the test
     private Timer timer; // Times the test
     private ActionListener timerListener; // Listens to the timer's actions
@@ -89,7 +87,6 @@ public class TypingTest extends JFrame
 	setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 	mainWindowLayout.setVgap(10);
 	mainWindowLayout.setHgap(10);
-	relativeSize = new Dimension(50,50);
 	// Set the main background color
 	getContentPane().setBackground(sisal);
 
@@ -99,9 +96,8 @@ public class TypingTest extends JFrame
 	title.setEditable(false);
 	title.setLineWrap(true);
 	title.setWrapStyleWord(true);
-	titleFont = new Font("Rockwell Extra Bold", Font.BOLD, 48);
+	titleFont = new Font(Font.SERIF, Font.BOLD, 48);
 	title.setFont(titleFont);
-	title.setPreferredSize(relativeSize);
 	title.setBackground(sisal);
 	add(title);
 
@@ -135,6 +131,7 @@ public class TypingTest extends JFrame
 
 	inputTextPane = new JTextPane();
 	inputTextPane.setMargin(new Insets(10, 10, 10, 10));
+	inputTextPane.setPreferredSize(new Dimension(100,100));
 	inputPanel.add(inputTextPane);
 	inputPrompt = new TextPrompt("Begin typing here!", inputTextPane);
 	inputPrompt.setForeground(Color.GRAY);
@@ -144,7 +141,10 @@ public class TypingTest extends JFrame
 	inputTextPane.addKeyListener(new KeyListener() {
 	    @Override
 	    public void keyTyped(KeyEvent e) {
-		inputFieldUpdated(e);
+		if(e.getKeyChar() == KeyEvent.VK_ENTER)
+		    endTest();
+		else
+		    inputFieldUpdated(e);
 	    }
 
 	    @Override
@@ -164,19 +164,7 @@ public class TypingTest extends JFrame
 	refreshButton.addActionListener(new ActionListener() {
 	    @Override
 	    public void actionPerformed(ActionEvent e) {
-		refreshButtonClicked(e);
-	    }
-	});
-
-	// initialize the help button
-	helpButton = new JButton();
-	helpButton.setText("HELP");
-
-	// Set the help button to call its method when clicked
-	helpButton.addActionListener(new ActionListener() {
-	    @Override
-	    public void actionPerformed(ActionEvent e) {
-		helpButtonClicked(e);
+		refreshButtonClicked();
 	    }
 	});
 
@@ -187,12 +175,9 @@ public class TypingTest extends JFrame
 	buttonPanel.setLayout(buttonLayout);
 	// add buttons to button panel
 	buttonPanel.add(refreshButton);
-	buttonPanel.add(helpButton);
 	buttonPanel.setBackground(sisal);
 	refreshButton.setBackground(armadillo);
 	refreshButton.setForeground(sisal);
-	helpButton.setBackground(armadillo);
-	helpButton.setForeground(sisal);
 
 	inputPanel.add(buttonPanel);
 	add(inputPanel);
@@ -252,7 +237,7 @@ public class TypingTest extends JFrame
 	setIconImage(getImage("images/keyboard.png"));
     }
 
-    private void refreshButtonClicked(ActionEvent e)
+    private void refreshButtonClicked()
     {
 	/**This method is called when the user clicks the "Refresh" button
 	 * It calls refresh() which sets up the user for the next test
@@ -263,15 +248,6 @@ public class TypingTest extends JFrame
 	refresh();
     }
 
-    private void helpButtonClicked(ActionEvent e)
-    {
-	/**This method is called when the user clicks the "HELP" button
-	 * It displays a new window with a help message
-	 */
-
-	System.out.println("SOMEONE CLICKED THE HELP BUTTONN!!!!!");
-    }
-
     private void inputFieldUpdated(KeyEvent e)
     {
 	/**This method is called whenever the user types a key in the input
@@ -279,12 +255,12 @@ public class TypingTest extends JFrame
 	 * If the test hasn't started yet, it starts the test.
 	 * If the test is in progress, it checks if the user has typed enough characters
 	 * to end the test
-	 * TODO It also checks the user's input and displays errors and accuracy
-	 * in real-time
 	 */
 
 	if(!testInProgress)
 	{
+	    // If the test is not in progress and the test has not been completed
+	    // begin the test
 	    if(!(inputTextPane.getText().length() == sampleTextPane.getText().length()))
 		beginTest();
 	}
@@ -324,6 +300,7 @@ public class TypingTest extends JFrame
     private void endTest()
     {
 	/**Called when the user types enough characters
+	 * or presses the enter key.
 	 * It ends the test and stops the timer
 	 */
 
@@ -341,7 +318,7 @@ public class TypingTest extends JFrame
 
     private void calcWPM(Instant end)
     {
-	/**Calculates the user's typing speed at the end of the test
+	/**Calculates the user's typing speed at the end of the test.
 	 * It counts the words in the input text field
 	 * and divides it by the number of minutes that have passed
 	 * since the test began
@@ -412,19 +389,16 @@ public class TypingTest extends JFrame
 	 */
 	
 	boolean[] errors = checkErrors(inputTextPane.getText());
-	for(boolean error : errors)
-	    System.out.print(error + ", ");
-	System.out.println();
 	int numChars = errors.length;
-	System.out.println("numChars: " + numChars);
 	int numCorrect = numChars;
 
+	// subtract one from numCorrect for every error found in the errors array
 	for(boolean error : errors)
 	    if(error)
 		numCorrect--;
-	System.out.println("numCorrect: " + numCorrect);
 	
 	double accuracyPercentage = ((double)numCorrect / (double)numChars);
+	// Display the accuracy percentage to the nearest whole percent
 	accuracy.setText(String.format("Accuracy: %3.0f%%", accuracyPercentage * 100));
 
     }
@@ -437,18 +411,18 @@ public class TypingTest extends JFrame
 	 * Otherwise, return null
 	 */
 
-	BufferedImage icon = null;
+	BufferedImage image = null;
 
 	try
 	{
-	    icon = ImageIO.read(new File(imagePath));
+	    image = ImageIO.read(new File(imagePath));
 	}
 	catch(IOException e)
 	{
 	    System.out.println("Could not find \"" + imagePath + "\"!!");
 	}
 
-	return icon;
+	return image;
     }
 
     private void refresh()
@@ -464,28 +438,30 @@ public class TypingTest extends JFrame
 		endTest();
 
 	// Choose a new random sample string to test the user
-	int randInt =  (int) (Math.random() * sampleTextPaneArray.length);
-	setsampleTextPane(sampleTextPaneArray[randInt]);
+	int randInt =  (int) (Math.random() * sampleTextArray.length);
+	setSampleText(sampleTextArray[randInt]);
 
-	sampleTextPane.setText(nextsampleTextPane);
+	sampleTextPane.setText(nextSampleText);
 	timerDisplay.setText("0:0");
 	inputTextPane.setText("");
 	inputTextPane.setEditable(true);
+	// Wrap the label text in html and paragraph tags so that it will wrap
+	// around to the next line
 	testStatusLabel.setText("<html><p>Start typing sample text to begin test</p></html>");
 	wpm.setText("0");
 	wordsTyped.setText("Words Typed: 0");
 	accuracy.setText("Accuracy: N/A");
     }
 
-    public void setsampleTextPane(String text)
+    public void setSampleText(String text)
     {
-	/**Receives sample text and stores it in nextsampleTextPane
+	/**Receives sample text and stores it in nextSampleText
 	 */
-	nextsampleTextPane = text;
+	nextSampleText = text;
     }
 
     // An array of sample texts that the user must type!
-    String[] sampleTextPaneArray = new String[]{"al sass lass as lass sass al",
+    String[] sampleTextArray = new String[]{"al sass lass as lass sass al",
 			";a as la s; ;; ll ss a ss a",
 			"The quick brown fox jumps over the lazy dog",
 			"The baker needs to knead the dough with pizzaz",
