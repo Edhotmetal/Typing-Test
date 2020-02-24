@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.UIManager.*;
 import javax.swing.border.Border;
 import java.awt.event.*;
 import java.awt.*;
@@ -16,7 +17,6 @@ import javax.swing.text.BadLocationException;
 public class TypingTest extends JFrame
 {
     private GridLayout mainWindowLayout; // The overall layout of the window
-    //TODO: Finish all the components!
 
     // Top-left of GridLayout
     private JTextArea title; // Displays the title on the top left
@@ -36,7 +36,7 @@ public class TypingTest extends JFrame
     private TextPrompt inputPrompt; // Provides placeholder text in the input box
     private JLabel inputLabel; // labels the input text field
 
-    private JButton refreshButton; // Restarts the test when clicked
+    private JButton restartButton; // Restarts the test when clicked
     private JPanel buttonPanel; // Holds the buttons at the bottom of the window
     private GridLayout buttonLayout; // arranges the buttons on their panel
     private Box inputPanel; // Holds the input text field and buttons
@@ -51,8 +51,7 @@ public class TypingTest extends JFrame
     private JLabel wordsTyped; // Displays the number of words the user has typed
     private JLabel timerLabel; // Labels the timer
     private JLabel timerDisplay; // Displays the timer
-    private JLabel accuracy; // Displays the user's typing accuracy
-
+    private JLabel errorPercentage; // Displays the percentage of errors in the user's input
 
     private String nextSampleText; // stores the sample text to be displayed in the next text
     private boolean testInProgress; // stores the state of the test
@@ -64,9 +63,26 @@ public class TypingTest extends JFrame
     {
 	/** Create new form TypingTest
 	 */
+	System.out.println("Setting Nimbus Look and Feel");
+	try
+	{
+	    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
+	    {
+		if("Nimubs".equals(info.getName()))
+		{
+		    UIManager.setLookAndFeel(info.getClassName());
+		    break;
+		}
+	    }
+	}
+	catch (Exception e)
+	{
+	    System.out.println("Unable to set Nimbus Look and Feel");
+	}
+
 	System.out.println("Initializing GUI");
 	initComponents();
-	refresh();
+	restart();
     }
 
     private void initComponents()
@@ -124,7 +140,7 @@ public class TypingTest extends JFrame
 	add(testStatusLabel);
 
 	// setup the bottom-left of the layout
-	add(new JLabel("PLACEHOLDER"));
+	add(new JLabel("")); // Empty filler label
 
 	// setup the bottom-middle of the layout
 	inputPanel = Box.createVerticalBox();
@@ -156,15 +172,15 @@ public class TypingTest extends JFrame
 	    }
 	});
 	
-	// initialize the refresh button
-	refreshButton = new JButton();
-	refreshButton.setText("Refresh");
+	// initialize the restart button
+	restartButton = new JButton();
+	restartButton.setText("Restart");
 
-	// Set the refresh button to call its method when clicked
-	refreshButton.addActionListener(new ActionListener() {
+	// Set the restart button to call its method when clicked
+	restartButton.addActionListener(new ActionListener() {
 	    @Override
 	    public void actionPerformed(ActionEvent e) {
-		refreshButtonClicked();
+		restartButtonClicked();
 	    }
 	});
 
@@ -174,10 +190,10 @@ public class TypingTest extends JFrame
 	buttonLayout.setHgap(10);
 	buttonPanel.setLayout(buttonLayout);
 	// add buttons to button panel
-	buttonPanel.add(refreshButton);
+	buttonPanel.add(restartButton);
 	buttonPanel.setBackground(sisal);
-	refreshButton.setBackground(armadillo);
-	refreshButton.setForeground(sisal);
+	restartButton.setBackground(armadillo);
+	restartButton.setForeground(sisal);
 
 	inputPanel.add(buttonPanel);
 	add(inputPanel);
@@ -209,15 +225,14 @@ public class TypingTest extends JFrame
 	wpm.setText("0");
 	wpm.setFont(statusFont);
 
-	accuracy = new JLabel();
-	accuracy.setText("Accuracy: N/A");
-	accuracy.setFont(statusFont);
+	errorPercentage = new JLabel();
+	errorPercentage.setFont(statusFont);
 
 	statusPanel.add(timerLabel);
 	statusPanel.add(wpmLabel);
 	statusPanel.add(timerDisplay);
 	statusPanel.add(wpm);
-	statusPanel.add(accuracy);
+	statusPanel.add(errorPercentage);
 	statusPanel.add(wordsTyped);
 
 	Border statusPanelBorder = BorderFactory.createEtchedBorder(sisal, armadillo);
@@ -237,15 +252,12 @@ public class TypingTest extends JFrame
 	setIconImage(getImage("images/keyboard.png"));
     }
 
-    private void refreshButtonClicked()
+    private void restartButtonClicked()
     {
-	/**This method is called when the user clicks the "Refresh" button
-	 * It calls refresh() which sets up the user for the next test
+	/**This method is called when the user clicks the "Restart" button
+	 * It calls restart() which sets up the user for the next test
 	 */
-
-	System.out.println("SOMEONE CLICKED THE refresh BUTTOHN!!!!!!");
-	System.out.println("BEGINNING THE TEST ALL OVER AGAIN!!!");
-	refresh();
+	restart();
     }
 
     private void inputFieldUpdated(KeyEvent e)
@@ -261,7 +273,7 @@ public class TypingTest extends JFrame
 	{
 	    // If the test is not in progress and the test has not been completed
 	    // begin the test
-	    if(!(inputTextPane.getText().length() == sampleTextPane.getText().length()))
+	    if(!testStatusLabel.getText().equals("Test completed"))
 		beginTest();
 	}
 	else
@@ -311,7 +323,7 @@ public class TypingTest extends JFrame
 	    testInProgress = false;
 	    inputTextPane.setEditable(false);
 	    testStatusLabel.setText("Test completed");
-	    calcAccuracy();
+	    calcErrorPercentage();
 	    highlightErrors(checkErrors(inputTextPane.getText()));
 	}
     }
@@ -324,7 +336,7 @@ public class TypingTest extends JFrame
 	 * since the test began
 	 */
 
-	// check if the test was completed or interrupted by the user clicking refresh
+	// check if the test was completed or interrupted by the user clicking restart
 	if(inputTextPane.getText().length() == sampleTextPane.getText().length())
 	{
 	    int numWords = inputTextPane.getText().split("\\s").length;
@@ -338,7 +350,7 @@ public class TypingTest extends JFrame
 
     private boolean[] checkErrors(String input)
     {
-	/**At the end of the test, check the user's input for accuracy
+	/**At the end of the test, check the user's input for errorPercentage
 	 * and return a boolean array indicating the indexes that contain
 	 * errors
 	 */
@@ -380,26 +392,29 @@ public class TypingTest extends JFrame
 		}
 	    }
 	}
+	// dereference the highlighter so that it doesn't continue highlighting
+	// during the next test in some cases
+	highlightPainter = null;
     }
 
-    private void calcAccuracy()
+    private void calcErrorPercentage()
     {
-	/** Calculates the user's accuracy and displays it
+	/** Calculates the user's error percentage and displays it
 	 * in the status panel
 	 */
 	
 	boolean[] errors = checkErrors(inputTextPane.getText());
 	int numChars = errors.length;
-	int numCorrect = numChars;
+	int numCorrect = 0;
 
-	// subtract one from numCorrect for every error found in the errors array
+	// add one to numCorrect for every error found in the errors array
 	for(boolean error : errors)
 	    if(error)
-		numCorrect--;
+		numCorrect++;
 	
-	double accuracyPercentage = ((double)numCorrect / (double)numChars);
-	// Display the accuracy percentage to the nearest whole percent
-	accuracy.setText(String.format("Accuracy: %3.0f%%", accuracyPercentage * 100));
+	double error = ((double)numCorrect / (double)numChars);
+	// Display the errorPercentage percentage to the nearest whole percent
+	errorPercentage.setText(String.format("Error %%: %3.0f%%", error * 100));
 
     }
 
@@ -425,10 +440,10 @@ public class TypingTest extends JFrame
 	return image;
     }
 
-    private void refresh()
+    private void restart()
     {
 	/** Resets the window to prepare for the next test
-	 * This is called when the user clicks refresh
+	 * This is called when the user clicks restart
 	 * Not when the test ends
 	 */
 
@@ -450,7 +465,7 @@ public class TypingTest extends JFrame
 	testStatusLabel.setText("<html><p>Start typing sample text to begin test</p></html>");
 	wpm.setText("0");
 	wordsTyped.setText("Words Typed: 0");
-	accuracy.setText("Accuracy: N/A");
+	errorPercentage.setText("Error %: N/A");
     }
 
     public void setSampleText(String text)
