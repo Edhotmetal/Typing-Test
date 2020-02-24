@@ -135,7 +135,7 @@ public class TypingTest extends JFrame
 	inputPanel = Box.createVerticalBox();
 
 	inputTextPane = new JTextPane();
-	inputTextPane.setMargin(new Insets(5, 5, 5, 5));
+	inputTextPane.setMargin(new Insets(10, 10, 10, 10));
 	inputPanel.add(inputTextPane);
 	inputPrompt = new TextPrompt("Begin typing here!", inputTextPane);
 	inputPrompt.setForeground(Color.GRAY);
@@ -236,10 +236,14 @@ public class TypingTest extends JFrame
 	statusPanel.add(accuracy);
 	statusPanel.add(wordsTyped);
 
+	Border statusPanelBorder = BorderFactory.createEtchedBorder(sisal, armadillo);
+	statusPanel.setBorder(BorderFactory.createCompoundBorder(statusPanelBorder,
+		    BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+
 	add(statusPanel);
 
 	// set main window size
-	setMinimumSize(new Dimension(800,300)); // Width: 800, Height: 300
+	setMinimumSize(new Dimension(600,300)); // Width: 600, Height: 300
 	setResizable(false);
 	pack();
 	// make sure the window is visible and focused
