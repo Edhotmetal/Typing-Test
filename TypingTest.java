@@ -10,10 +10,8 @@ import java.time.Duration;
 import java.lang.Math;
 
 // imports for highlighting errors
-import javax.swing.text.AttributeSet;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.BadLocationException;
 
 public class TypingTest extends JFrame
 {
@@ -28,6 +26,7 @@ public class TypingTest extends JFrame
     // Top-middle of GridLayout
     private JTextPane sampleTextPane; // Displays the sample text for the user
     private JPanel samplePanel; // Holds the sample label and text
+    private GridLayout sampleLayout; // arranges the sample components
 
     // Top-right of GridLayout
     private JLabel testStatusLabel; // displays the current status of the test
@@ -100,7 +99,7 @@ public class TypingTest extends JFrame
 	title.setEditable(false);
 	title.setLineWrap(true);
 	title.setWrapStyleWord(true);
-	titleFont = new Font(Font.SERIF, Font.BOLD, 48);
+	titleFont = new Font("Rockwell Extra Bold", Font.BOLD, 48);
 	title.setFont(titleFont);
 	title.setPreferredSize(relativeSize);
 	title.setBackground(sisal);
@@ -115,7 +114,7 @@ public class TypingTest extends JFrame
 	sampleTextPane.setAlignmentX(Component.CENTER_ALIGNMENT);
 	sampleTextPane.setEditable(false);
 
-	GridLayout sampleLayout = new GridLayout(1,1);
+	sampleLayout = new GridLayout(1,1);
 	sampleLayout.setVgap(3);
 	samplePanel = new JPanel(sampleLayout);
 	samplePanel.setBackground(sisal);
@@ -206,7 +205,7 @@ public class TypingTest extends JFrame
 	statusPanel.setBackground(sisal);
 	statusLayout.setHgap(10);
 	statusLayout.setVgap(0);
-	statusFont = new Font(Font.SERIF, Font.BOLD, 18);
+	statusFont = new Font(Font.SERIF, Font.BOLD, 16);
 
 	timerLabel = new JLabel();
 	timerLabel.setText("Time (s:ms)");
@@ -243,7 +242,7 @@ public class TypingTest extends JFrame
 	add(statusPanel);
 
 	// set main window size
-	setMinimumSize(new Dimension(600,300)); // Width: 600, Height: 300
+	setMinimumSize(new Dimension(900,300)); // Width: 600, Height: 300
 	setResizable(false);
 	pack();
 	// make sure the window is visible and focused
@@ -280,7 +279,8 @@ public class TypingTest extends JFrame
 	 * If the test hasn't started yet, it starts the test.
 	 * If the test is in progress, it checks if the user has typed enough characters
 	 * to end the test
-	 * TODO It also checks the user's input and displays errors in real-time
+	 * TODO It also checks the user's input and displays errors and accuracy
+	 * in real-time
 	 */
 
 	if(!testInProgress)
@@ -289,10 +289,7 @@ public class TypingTest extends JFrame
 		beginTest();
 	}
 	else
-	{
 	    wordsTyped.setText("Words Typed: " + inputTextPane.getText().split("\\s").length);
-	    checkAccuracy(e.getKeyChar());
-	    	}
 
 	
 	if((inputTextPane.getText().length()) + 1 == sampleTextPane.getText().length())
@@ -321,7 +318,6 @@ public class TypingTest extends JFrame
 	};
 	timer = new Timer(1, timerListener);
 	timer.start();
-	timerLabel.setText("Time");
 	testInProgress = true;
     }
 
@@ -329,7 +325,6 @@ public class TypingTest extends JFrame
     {
 	/**Called when the user types enough characters
 	 * It ends the test and stops the timer
-	 * TODO: Calculate accuracy
 	 */
 
 	if(testInProgress)
@@ -339,6 +334,8 @@ public class TypingTest extends JFrame
 	    testInProgress = false;
 	    inputTextPane.setEditable(false);
 	    testStatusLabel.setText("Test completed");
+	    calcAccuracy();
+	    highlightErrors(checkErrors(inputTextPane.getText()));
 	}
     }
 
@@ -362,15 +359,13 @@ public class TypingTest extends JFrame
 	    wpm.setText("0");
     }
 
-    private void checkAccuracy(char c)
+    private boolean[] checkErrors(String input)
     {
-	/** Every time the user types a character, this method checks for accuracy
-	 * and displays errors in real-time by highlighting them in the
-	 * input text pane.
+	/**At the end of the test, check the user's input for accuracy
+	 * and return a boolean array indicating the indexes that contain
+	 * errors
 	 */
-	// The input text pane hasn't been updated with the user's latest input so
-	// we must add it here
-	String input = (inputTextPane.getText() + Character.toString(c));
+
 	String sample = sampleTextPane.getText();
 	boolean[] errors = new boolean[input.length()];
 
@@ -380,45 +375,60 @@ public class TypingTest extends JFrame
 	    if(input.charAt(i) != sample.charAt(i))
 		errors[i] = true;
 
-	highlight(errors, c);
+	return errors;
     }
 
-    private void highlight(boolean[] errors, char c)
+    private void highlightErrors(boolean[] errors)
     {
 	/** Highlights the characters in the input text pane
 	 * specified by the errors array
 	 */
 
-	String text = inputTextPane.getText() + Character.toString(c);
-	inputTextPane.setText("");
-
+	// Initialize the red highlighter
+	DefaultHighlighter.DefaultHighlightPainter highlightPainter = 
+	    new DefaultHighlighter.DefaultHighlightPainter(Color.RED);
+	
+	// Iterate through the errors and highlight them in the input
 	for(int i = 0; i < errors.length; i++)
 	{
-	    if(errors[i] == true)
-		appendToInput(Character.toString(text.charAt(i)), Color.RED);
-	    else
-		appendToInput(Character.toString(text.charAt(i)), Color.BLACK);
+	    if(errors[i])
+	    {
+		try
+		{
+		    inputTextPane.getHighlighter().addHighlight(i, i+1, highlightPainter);
+		}
+		catch (BadLocationException e)
+		{
+		    System.out.println("CANNOT HIGHLIGHT AT INDEX " + i);
+		}
+	    }
 	}
-	
-	// The process of validating input will have duplicated the input
-	// so we need to remove the extra character
-	inputTextPane.setText(
-		inputTextPane.getText().substring(0,inputTextPane.getText().length() - 1));
     }
 
-    private void appendToInput(String msg, Color c)
+    private void calcAccuracy()
     {
-	StyleContext sc = StyleContext.getDefaultStyleContext();
-	AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
+	/** Calculates the user's accuracy and displays it
+	 * in the status panel
+	 */
+	
+	boolean[] errors = checkErrors(inputTextPane.getText());
+	for(boolean error : errors)
+	    System.out.print(error + ", ");
+	System.out.println();
+	int numChars = errors.length;
+	System.out.println("numChars: " + numChars);
+	int numCorrect = numChars;
 
-	aset = sc.addAttribute(aset, StyleConstants.FontFamily, "Lucida Console");
-	aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
+	for(boolean error : errors)
+	    if(error)
+		numCorrect--;
+	System.out.println("numCorrect: " + numCorrect);
+	
+	double accuracyPercentage = ((double)numCorrect / (double)numChars);
+	accuracy.setText(String.format("Accuracy: %3.0f%%", accuracyPercentage * 100));
 
-	int len = inputTextPane.getDocument().getLength();
-	inputTextPane.setCaretPosition(len);
-	inputTextPane.setCharacterAttributes(aset, false);
-	inputTextPane.replaceSelection(msg);
     }
+
 
     private BufferedImage getImage(String imagePath)
     {
@@ -464,6 +474,7 @@ public class TypingTest extends JFrame
 	testStatusLabel.setText("<html><p>Start typing sample text to begin test</p></html>");
 	wpm.setText("0");
 	wordsTyped.setText("Words Typed: 0");
+	accuracy.setText("Accuracy: N/A");
     }
 
     public void setsampleTextPane(String text)
